@@ -268,9 +268,8 @@ class BaseMethod(pl.LightningModule):
         if not no_channel_last:
             self = self.to(memory_format=torch.channels_last)
 
-        self.training_data_log = None
-        if kwargs.get("training_data_log", False):
-            self.training_data_log = TrainingDataLog()
+        self.training_labels = None
+        self.training_labels_log_dir = None
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
@@ -636,6 +635,12 @@ class BaseMethod(pl.LightningModule):
             log.update({"val_knn_acc1": val_knn_acc1, "val_knn_acc5": val_knn_acc5})
 
         self.log_dict(log, sync_dist=True)
+
+    def train_epoch_end(self, outs: List[Dict[str, Any]]):
+        if self.training_labels is not None:
+            save_path = os.path.join(self.training_labels_log_dir, f"{self.current_epoch}_preds.pt")
+            print (f"Saving training labels to {save_path}")
+            torch.save(self.training_labels, save_path)
 
 
 class BaseMomentumMethod(BaseMethod):

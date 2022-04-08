@@ -136,16 +136,17 @@ class BYOL(BaseMomentumMethod):
         # forward momentum backbone
         with torch.no_grad():
             Z_momentum = [self.momentum_projector(f) for f in momentum_feats]
-            print (len(momentum_feats))
-            print (len(img_indexes))
-            import pdb; pdb.set_trace()
-
+        
         # ------- negative consine similarity loss -------
         neg_cos_sim = 0
         for v1 in range(self.num_large_crops):
             #self.training_data_log.update("momentum", Z_momentum[v1])
             for v2 in np.delete(range(self.num_crops), v1):
                 neg_cos_sim += byol_loss_func(P[v2], Z_momentum[v1])
+        
+        if self.training_labels is not None:
+            self.training_labels[img_indexes] = torch.stack(Z_momentum).mean(dim=0)
+
         # calculate std of features
         with torch.no_grad():
             z_std = F.normalize(torch.stack(Z[: self.num_large_crops]), dim=-1).std(dim=1).mean()

@@ -100,6 +100,12 @@ def main():
             train_dataset, batch_size=args.batch_size, num_workers=args.num_workers
         )
 
+    if args.log_training_labels:
+        assert args.training_labels_log_dir is not None, "Must specify training_labels_log_dir if logging training labels"
+        os.path.makedirs(args.training_labels_log_dir)
+        model.training_labels = torch.zeros([len(train_dataset), args.proj_hidden_dim]).half()
+        model.training_labels_log_dir = args.training_labels_log_dir
+
     # normal dataloader for when it is available
     if args.dataset == "custom" and (args.no_labels or args.val_dir is None):
         val_loader = None
