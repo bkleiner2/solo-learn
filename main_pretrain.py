@@ -105,7 +105,7 @@ def main():
         assert args.training_labels_log_dir is not None, "Must specify training_labels_log_dir if logging training labels"
         assert not os.path.exists(args.training_labels_log_dir), "If you really want to overwrite this training labels dir, delete it first.  Otherwise rename"
         os.makedirs(args.training_labels_log_dir)
-        model.training_labels = torch.zeros([len(train_dataset), args.proj_hidden_dim]).half()
+        model.training_labels = torch.zeros([len(train_dataset), args.proj_output_dim]).half()
         model.training_labels_log_dir = args.training_labels_log_dir
 
     # normal dataloader for when it is available

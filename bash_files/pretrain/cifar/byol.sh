@@ -2,7 +2,7 @@ python3 ../../../main_pretrain.py \
     --dataset $1 \
     --backbone resnet18 \
     --data_dir ./datasets \
-    --max_epochs 1000 \
+    --max_epochs 2 \
     --gpus 0 \
     --accelerator gpu \
     --precision 16 \
@@ -38,4 +38,6 @@ python3 ../../../main_pretrain.py \
     --pred_hidden_dim 4096 \
     --base_tau_momentum 0.9995 \
     --final_tau_momentum 1.0 \
-    --momentum_classifier
+    --momentum_classifier \
+    --training_labels_log_dir training_labels \
+    --log_training_labels
