@@ -140,12 +140,11 @@ class BYOL(BaseMomentumMethod):
         # ------- negative consine similarity loss -------
         neg_cos_sim = 0
         for v1 in range(self.num_large_crops):
-            #self.training_data_log.update("momentum", Z_momentum[v1])
             for v2 in np.delete(range(self.num_crops), v1):
                 neg_cos_sim += byol_loss_func(P[v2], Z_momentum[v1])
         
         if self.training_labels is not None:
-            self.training_labels[img_indexes] = torch.stack(Z_momentum).mean(dim=0)
+            self.training_labels[img_indexes] = torch.stack(Z_momentum).mean(dim=0).detach().cpu()
 
         # calculate std of features
         with torch.no_grad():

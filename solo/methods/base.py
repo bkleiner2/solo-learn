@@ -17,6 +17,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import os
 import warnings
 from argparse import ArgumentParser
 from functools import partial
@@ -636,7 +637,7 @@ class BaseMethod(pl.LightningModule):
 
         self.log_dict(log, sync_dist=True)
 
-    def train_epoch_end(self, outs: List[Dict[str, Any]]):
+    def on_train_epoch_end(self):
         if self.training_labels is not None:
             save_path = os.path.join(self.training_labels_log_dir, f"{self.current_epoch}_preds.pt")
             print (f"Saving training labels to {save_path}")
