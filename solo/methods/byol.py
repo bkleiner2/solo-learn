@@ -127,7 +127,7 @@ class BYOL(BaseMomentumMethod):
         return {**out, "z": z, "p": p}
 
     def _shared_step(
-        self, feats: List[torch.Tensor], momentum_feats: List[torch.Tensor]
+        self, feats: List[torch.Tensor], momentum_feats: List[torch.Tensor], img_indexes: List[int]
     ) -> torch.Tensor:
 
         Z = [self.projector(f) for f in feats]
@@ -136,13 +136,16 @@ class BYOL(BaseMomentumMethod):
         # forward momentum backbone
         with torch.no_grad():
             Z_momentum = [self.momentum_projector(f) for f in momentum_feats]
+            print (len(momentum_feats))
+            print (len(img_indexes))
+            import pdb; pdb.set_trace()
 
         # ------- negative consine similarity loss -------
         neg_cos_sim = 0
         for v1 in range(self.num_large_crops):
+            #self.training_data_log.update("momentum", Z_momentum[v1])
             for v2 in np.delete(range(self.num_crops), v1):
                 neg_cos_sim += byol_loss_func(P[v2], Z_momentum[v1])
-
         # calculate std of features
         with torch.no_grad():
             z_std = F.normalize(torch.stack(Z[: self.num_large_crops]), dim=-1).std(dim=1).mean()
@@ -164,7 +167,7 @@ class BYOL(BaseMomentumMethod):
         out = super().training_step(batch, batch_idx)
         class_loss = out["loss"]
 
-        neg_cos_sim, z_std = self._shared_step(out["feats"], out["momentum_feats"])
+        neg_cos_sim, z_std = self._shared_step(out["feats"], out["momentum_feats"], batch[0])
 
         metrics = {
             "train_neg_cos_sim": neg_cos_sim,

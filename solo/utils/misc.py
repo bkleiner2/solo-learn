@@ -20,6 +20,7 @@
 import math
 import warnings
 from typing import List, Tuple
+from collections import defaultdict
 
 import torch
 import torch.distributed as dist
@@ -200,3 +201,21 @@ class GatherLayer(torch.autograd.Function):
 def gather(X, dim=0):
     """Gathers tensors from all processes, supporting backward propagation."""
     return torch.cat(GatherLayer.apply(X), dim=dim)
+
+
+class TrainingDataLog:
+    def __init__(self):
+        self.data_log = {}
+        self.counts = defaultdict(int)
+
+    def update(self, key, value):
+        self.counts[key] += 1
+        if self.counts[key] == 1:
+            self.data_log[key] = value
+        else:
+            count = self.counts[key]
+            self.data_log[key] = (self.data_log[key] * (count - 1) + value) / count
+
+
+
+

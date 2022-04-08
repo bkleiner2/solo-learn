@@ -219,9 +219,14 @@ def additional_setup_pretrain(args: Namespace):
         args.gpus = [args.gpus]
     elif isinstance(args.gpus, str):
         args.gpus = [int(gpu) for gpu in args.gpus.split(",") if gpu]
+    
+    if args.gpus == None:
+        devices = 1
+    else:
+        devices = len(args.gpus)
 
     # adjust lr according to batch size
-    args.lr = args.lr * args.batch_size * len(args.gpus) / 256
+    args.lr = args.lr * args.batch_size * devices / 256
 
 
 def additional_setup_linear(args: Namespace):
