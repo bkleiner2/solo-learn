@@ -9,19 +9,21 @@ python3 ../../../main_pretrain.py \
     --optimizer sgd \
     --lars \
     --grad_clip_lars \
-    --eta_lars 0.02 \
+    --eta_lars 1e-3 \
     --exclude_bias_n_norm \
     --scheduler warmup_cosine \
-    --lr 1.0 \
+    --lr 0.45 \
     --classifier_lr 0.1 \
-    --weight_decay 1e-5 \
+    --weight_decay 15e-6 \
     --batch_size 256 \
     --num_workers 4 \
     --brightness 0.4 \
     --contrast 0.4 \
     --saturation 0.2 \
     --hue 0.1 \
-    --gaussian_prob 0.0 0.0 \
+    --horizontal_flip_prob 0.5 \
+    --color_jitter_prob 0.8 \
+    --gaussian_prob 1.0 0.1 \
     --solarization_prob 0.0 0.2 \
     --crop_size 32 \
     --num_crops_per_aug 1 1 \
@@ -34,6 +36,6 @@ python3 ../../../main_pretrain.py \
     --proj_output_dim 256 \
     --proj_hidden_dim 4096 \
     --pred_hidden_dim 4096 \
-    --base_tau_momentum 0.99 \
+    --base_tau_momentum 0.9995 \
     --final_tau_momentum 1.0 \
     --momentum_classifier
