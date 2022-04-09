@@ -2,7 +2,7 @@ python3 ../../../main_pretrain.py \
     --dataset $1 \
     --backbone resnet18 \
     --data_dir ./datasets \
-    --max_epochs 2 \
+    --max_epochs 200 \
     --gpus 0 \
     --accelerator gpu \
     --precision 16 \
@@ -28,8 +28,8 @@ python3 ../../../main_pretrain.py \
     --crop_size 32 \
     --num_crops_per_aug 1 1 \
     --name byol-$1 \
-    --project solo-learn \
-    --entity unitn-mhug \
+    --project ssl-project \
+    --entity bkleiner \
     --wandb \
     --save_checkpoint \
     --method byol \

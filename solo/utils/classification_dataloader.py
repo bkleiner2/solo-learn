@@ -288,6 +288,7 @@ def prepare_data(
         val_dir=val_dir,
         download=download,
     )
+    print (f"train_dataset_size={len(train_dataset)} val_dataset_size={len(val_dataset)}")
     train_loader, val_loader = prepare_dataloaders(
         train_dataset,
         val_dataset,
