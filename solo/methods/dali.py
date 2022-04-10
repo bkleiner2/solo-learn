@@ -29,6 +29,7 @@ from solo.utils.dali_dataloader import (
     CustomNormalPipeline,
     CustomTransform,
     ImagenetTransform,
+    CifarTransform,
     NormalPipeline,
     PretrainPipeline,
 )
@@ -163,6 +164,8 @@ class PretrainABC(ABC):
         dataset = self.extra_args["dataset"]
         if dataset in ["imagenet100", "imagenet"]:
             transform_pipeline = ImagenetTransform
+        elif dataset in ["cifar10", "cifar100"]:
+            transform_pipeline = CifarTransform
         elif dataset == "custom":
             transform_pipeline = CustomTransform
         else:
