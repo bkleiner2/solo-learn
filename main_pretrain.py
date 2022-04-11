@@ -109,9 +109,7 @@ def main():
         model.training_labels_log_dir = args.training_labels_log_dir
     
     # normal dataloader for when it is available
-    if True:
-        val_loader = None
-    elif args.dataset == "custom" and (args.no_labels or args.val_dir is None):
+    if args.dataset == "custom" and (args.no_labels or args.val_dir is None):
         val_loader = None
     elif args.dataset in ["imagenet100", "imagenet"] and args.val_dir is None:
         val_loader = None
