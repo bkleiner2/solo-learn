@@ -284,7 +284,6 @@ class NormalPipeline(Pipeline):
             labels = labels.gpu()
         # PyTorch expects labels as INT64
         labels = self.to_int64(labels)
-
         return (images, labels)
 
 
@@ -396,9 +395,10 @@ class ImagenetTransform:
         out = self.cmn(out, mirror=self.coin05())
         return out
 
-class CifarTransform(BaseTransform):
+class CifarTransform:
     def __init__(
         self,
+        device: str,
         cifar: str,
         brightness: float,
         contrast: float,
@@ -623,6 +623,7 @@ class PretrainPipeline(Pipeline):
         seed: int = 12,
         no_labels: bool = False,
         encode_indexes_into_labels: bool = False,
+        cifar100: bool = False
     ):
         """Initializes the pipeline for pretraining.
 
@@ -655,8 +656,9 @@ class PretrainPipeline(Pipeline):
         )
 
         self.device = device
-
+        
         data_path = Path(data_path)
+        
         if no_labels:
             files = [data_path / f for f in sorted(os.listdir(data_path))]
             labels = [-1] * len(files)
@@ -698,6 +700,19 @@ class PretrainPipeline(Pipeline):
                 num_shards=num_shards,
                 shuffle_after_epoch=random_shuffle,
             )
+        elif cifar100:
+            #files = sorted(os.listdir(f"{data_path}/images"))
+            #print (files[-20:])
+            #with open(os.path.join(data_path, "labels.pkl") as labels_file:
+            #    labels = pickle.load(labels_file)
+            #print (labels[-20:])
+            print (data_path / Path("file_list.txt"))
+            self.reader = ops.readers.File(
+                file_list=data_path / Path("file_list.txt"),
+                shard_id=shard_id,
+                num_shards=num_shards,
+                shuffle_after_epoch=random_shuffle,
+            )
         else:
             self.reader = ops.readers.File(
                 file_root=data_path,
@@ -727,7 +742,7 @@ class PretrainPipeline(Pipeline):
 
         # read images from memory
         inputs, labels = self.reader(name="Reader")
-
+        
         images = self.decode(inputs)
 
         crops = self.transforms(images)
@@ -736,7 +751,7 @@ class PretrainPipeline(Pipeline):
             labels = labels.gpu()
         # PyTorch expects labels as INT64
         labels = self.to_int64(labels)
-
+        print ("INSIDE DEFINE GRAPH=", self.device, self.num_threads)
         return (*crops, labels)
 
     def __repr__(self) -> str:

@@ -107,13 +107,15 @@ def main():
         os.makedirs(args.training_labels_log_dir)
         model.training_labels = torch.zeros([len(train_dataset), args.proj_output_dim]).half()
         model.training_labels_log_dir = args.training_labels_log_dir
-
+    
     # normal dataloader for when it is available
-    if args.dataset == "custom" and (args.no_labels or args.val_dir is None):
+    if True:
+        val_loader = None
+    elif args.dataset == "custom" and (args.no_labels or args.val_dir is None):
         val_loader = None
     elif args.dataset in ["imagenet100", "imagenet"] and args.val_dir is None:
         val_loader = None
-    else:
+    else: 
         _, val_loader = prepare_data_classification(
             args.dataset,
             data_dir=args.data_dir,
@@ -187,6 +189,7 @@ def main():
     )
 
     if args.dali:
+        print ("RUNNING WITH DALI")
         model.set_loaders(val_loader=val_loader)
         trainer.fit(model, ckpt_path=ckpt_path)
     else:

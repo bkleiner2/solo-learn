@@ -155,7 +155,10 @@ class PretrainABC(ABC):
 
         num_workers = self.extra_args["num_workers"]
         data_dir = Path(self.extra_args["data_dir"])
-        train_dir = Path(self.extra_args["train_dir"])
+        if self.extra_args["train_dir"] is None:
+            train_dir = Path(f"{self.extra_args['dataset']}/train")
+        else:
+            train_dir = Path(self.extra_args["train_dir"])
 
         # hack to encode image indexes into the labels
         self.encode_indexes_into_labels = self.extra_args["encode_indexes_into_labels"]
@@ -166,11 +169,16 @@ class PretrainABC(ABC):
             transform_pipeline = ImagenetTransform
         elif dataset in ["cifar10", "cifar100"]:
             transform_pipeline = CifarTransform
+            if isinstance(transform_kwargs, list):
+                for trans in transform_kwargs:
+                    trans["cifar"] = dataset
+            else:
+                transform_kwargs["cifar"] = dataset
         elif dataset == "custom":
             transform_pipeline = CustomTransform
         else:
             raise ValueError(dataset, "is not supported, used [imagenet, imagenet100 or custom]")
-
+        
         if unique_augs > 1:
             transforms = [
                 transform_pipeline(
@@ -194,6 +202,7 @@ class PretrainABC(ABC):
             num_threads=num_workers,
             no_labels=self.extra_args["no_labels"],
             encode_indexes_into_labels=self.encode_indexes_into_labels,
+            cifar100=self.extra_args["dataset"] == "cifar100"
         )
         output_map = (
             [f"large{i}" for i in range(self.num_large_crops)]
