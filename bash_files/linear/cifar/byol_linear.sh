@@ -15,8 +15,9 @@ python3 ../../../main_linear.py \
     --weight_decay 0 \
     --batch_size 256 \
     --num_workers 4 \
-    --name byol-cifar100-linear-eval2 \
-    --pretrained_feature_extractor "../../pretrain/cifar/trained_models/byol/3py614j8/byol-cifar100-3py614j8-ep=199.ckpt" \
+    --name byol-cifar100-linear-eval-600pt-mom \
+    --pretrained_feature_extractor "../../pretrain/cifar/trained_models/byol/gshvbbrc/byol-cifar100-gshvbbrc-ep=601.ckpt" \
     --project ssl-project \
     --entity bkleiner \
+    --use_momentum_backbone \
     --wandb

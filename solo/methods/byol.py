@@ -72,6 +72,8 @@ class BYOL(BaseMomentumMethod):
             nn.Linear(pred_hidden_dim, proj_output_dim),
         )
 
+        self.loss_function_to_use = kwargs.get("loss_function_to_use", "neg_cos_sim")
+
     @staticmethod
     def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         parent_parser = super(BYOL, BYOL).add_model_specific_args(parent_parser)
@@ -139,18 +141,55 @@ class BYOL(BaseMomentumMethod):
         
         # ------- negative consine similarity loss -------
         neg_cos_sim = 0
+        cross_entropy = 0
+        l1_dist = 0
+        l2_dist = 0
+        smooth_l1 = 0
+        kl_div = 0
         for v1 in range(self.num_large_crops):
             for v2 in np.delete(range(self.num_crops), v1):
-                neg_cos_sim += byol_loss_func(P[v2], Z_momentum[v1])
+                p_detach = P[v2].detach()
+                z_detach = Z_momentum[v1].detach()
+                #TODO generalize this to all options
+                if self.loss_function_to_use == "neg_cos_sim":
+                    neg_cos_sim += byol_loss_func(P[v2], Z_momentum[v1])
+                    l2_dist += F.mse_loss(p_detach, z_detach)
+                elif self.loss_function_to_use == "l2_dist":
+                    neg_cos_sim += byol_loss_func(p_detach, z_detach)
+                    l2_dist += F.mse_loss(P[v2], z_detach)
+                else:
+                    raise ValueError("Only neg_cos_sim and l2_dist are supported")
+                cross_entropy += F.cross_entropy(p_detach, z_detach)
+                l1_dist += F.l1_loss(p_detach, z_detach)
+                smooth_l1 += F.smooth_l1_loss(p_detach, z_detach)
+                kl_div += F.kl_div(p_detach, z_detach)
+
+        metrics = {
+            "train_feats_cross_entropy": cross_entropy,
+            "train_feats_l1_dist": l1_dist,
+            "train_feats_l2_dist": l2_dist,
+            "train_feats_smooth_l1": smooth_l1,
+            "train_feats_kl_div": kl_div,
+            "train_neg_cos_sim": neg_cos_sim,
+        }
         
         if self.training_labels is not None:
             self.training_labels[img_indexes] = torch.stack(Z_momentum).mean(dim=0).detach().cpu()
 
         # calculate std of features
         with torch.no_grad():
+            mom_std = F.normalize(torch.stack(momentum_feats), dim=-1).std(dim=1).mean()
             z_std = F.normalize(torch.stack(Z[: self.num_large_crops]), dim=-1).std(dim=1).mean()
 
-        return neg_cos_sim, z_std
+        metrics["train_mom_feats_std"] = mom_std
+        metrics["train_z_std"] = z_std
+
+        self.log_dict(metrics, on_epoch=True, sync_dist=True)
+
+        # keeping this consistent with prior runs so we can compare easily
+        key_prefix = "train_" if self.loss_function_to_use == "neg_cos_sim" else "train_feats_"
+
+        return metrics[key_prefix + self.loss_function_to_use], z_std
 
     def training_step(self, batch: Sequence[Any], batch_idx: int) -> torch.Tensor:
         """Training step for BYOL reusing BaseMethod training step.
@@ -167,12 +206,6 @@ class BYOL(BaseMomentumMethod):
         out = super().training_step(batch, batch_idx)
         class_loss = out["loss"]
 
-        neg_cos_sim, z_std = self._shared_step(out["feats"], out["momentum_feats"], batch[0])
+        byol_loss, z_std = self._shared_step(out["feats"], out["momentum_feats"], batch[0])
 
-        metrics = {
-            "train_neg_cos_sim": neg_cos_sim,
-            "train_z_std": z_std,
-        }
-        self.log_dict(metrics, on_epoch=True, sync_dist=True)
-
-        return neg_cos_sim + class_loss
+        return byol_loss + class_loss

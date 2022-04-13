@@ -706,9 +706,9 @@ class PretrainPipeline(Pipeline):
             #with open(os.path.join(data_path, "labels.pkl") as labels_file:
             #    labels = pickle.load(labels_file)
             #print (labels[-20:])
-            print (data_path / Path("file_list.txt"))
+            print (data_path / Path("cifar-100-python/file_list.txt"))
             self.reader = ops.readers.File(
-                file_list=data_path / Path("file_list.txt"),
+                file_list=data_path / Path("cifar-100-python/file_list.txt"),
                 shard_id=shard_id,
                 num_shards=num_shards,
                 shuffle_after_epoch=random_shuffle,

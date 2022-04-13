@@ -29,7 +29,7 @@ def save_files(root_dir, np_images, labels):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base_dir", default="../bash_files/pretrain/cifar/datasets/cifar100")
-    parser.add_argument("--output_root", default="../data_files/cifar100")
+    parser.add_argument("--output_root", default="../bash_files/pretrain/cifar/datasets/cifar100")
     args = parser.parse_args()
 
 

@@ -55,6 +55,7 @@ def parse_args_pretrain() -> argparse.Namespace:
     # add logging args
     parser.add_argument("--log_training_labels", action="store_true")
     parser.add_argument("--training_labels_log_dir")
+    parser.add_argument("--loss_function_to_use")
 
     # add shared arguments
     dataset_args(parser)
@@ -126,6 +127,7 @@ def parse_args_linear() -> argparse.Namespace:
 
     # THIS LINE IS KEY TO PULL WANDB AND SAVE_CHECKPOINT
     parser.add_argument("--save_checkpoint", action="store_true")
+    parser.add_argument("--use_momentum_backbone", action="store_true")
     temp_args, _ = parser.parse_known_args()
 
     # optionally add checkpointer

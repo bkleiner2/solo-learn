@@ -92,6 +92,7 @@ def main():
     ckpt_path = args.pretrained_feature_extractor
 
     state = torch.load(ckpt_path)["state_dict"]
+    backbone_to_use = "momentum_backbone" if args.use_momentum_backbone else "backbone"
     for k in list(state.keys()):
         if "encoder" in k:
             raise Exception(
@@ -99,9 +100,10 @@ def main():
                 "Either use a new one, or convert it by replacing"
                 "all 'encoder' occurrences in state_dict with 'backbone'"
             )
-        if "backbone" in k:
-            state[k.replace("backbone.", "")] = state[k]
+        if backbone_to_use in k:
+            state[k.replace(f"{backbone_to_use}.", "")] = state[k]
         del state[k]
+    
     backbone.load_state_dict(state, strict=False)
 
     print(f"loaded {ckpt_path}")
