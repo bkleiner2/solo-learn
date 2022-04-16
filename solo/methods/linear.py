@@ -134,6 +134,7 @@ class LinearModel(pl.LightningModule):
         # wandb
         parser.add_argument("--name")
         parser.add_argument("--project")
+        parser.add_argument("--wandb_version")
         parser.add_argument("--entity", default=None, type=str)
         parser.add_argument("--wandb", action="store_true")
         parser.add_argument("--offline", action="store_true")

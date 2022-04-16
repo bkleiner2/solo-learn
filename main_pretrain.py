@@ -132,6 +132,7 @@ def main():
             project=args.project,
             entity=args.entity,
             offline=args.offline,
+            version=args.wandb_version
         )
         wandb_logger.watch(model, log="gradients", log_freq=100)
         wandb_logger.log_hyperparams(args)
@@ -187,11 +188,11 @@ def main():
     )
 
     if args.dali:
-        print ("RUNNING WITH DALI")
         model.set_loaders(val_loader=val_loader)
         trainer.fit(model, ckpt_path=ckpt_path)
     else:
         model.set_loaders(train_loader=train_loader, val_loader=val_loader)
+        print (f"ckpt_path={ckpt_path}")
         trainer.fit(model, ckpt_path=ckpt_path)
 
 

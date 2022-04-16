@@ -134,8 +134,16 @@ class SimSiam(BaseMethod):
 
         # ------- contrastive loss -------
         neg_cos_sim = simsiam_loss_func(p1, z2) / 2 + simsiam_loss_func(p2, z1) / 2
+        cross_entropy = (F.cross_entropy(p1, z2.detach()) + F.cross_entropy(p2, z1.detach()))
+        l1_dist = (F.l1_loss(p1, z2.detach()) + F.l1_loss(p2, z1.detach())) / 2
+        l2_dist = (F.mse_loss(p1, z2.detach()) + F.mse_loss(p2, z1.detach())) / 2
+        smooth_l1 = (F.smooth_l1_loss(p1, z2.detach()) + F.smooth_l1_loss(p2, z1.detach())) / 2
+        kl_div = (F.kl_div(p1, z2.detach()) + F.kl_div(p2, z1.detach())) / 2
 
         # calculate std of features
+        feats1_std = F.normalize(feats1, dim=-1).std(dim=0).mean()
+        feats2_std = F.normalize(feats2, dim=-1).std(dim=0).mean()
+        feats_std = (feats1_std + feats2_std) / 2
         z1_std = F.normalize(z1, dim=-1).std(dim=0).mean()
         z2_std = F.normalize(z2, dim=-1).std(dim=0).mean()
         z_std = (z1_std + z2_std) / 2
@@ -143,6 +151,12 @@ class SimSiam(BaseMethod):
         metrics = {
             "train_neg_cos_sim": neg_cos_sim,
             "train_z_std": z_std,
+            "train_feats_std": feats_std,
+            "train_cross_entropy": cross_entropy,
+            "train_l1_dist": l1_dist,
+            "train_l2_dist": l2_dist,
+            "train_smooth_l1": smooth_l1,
+            "train_kl_div": kl_div,
         }
         self.log_dict(metrics, on_epoch=True, sync_dist=True)
 

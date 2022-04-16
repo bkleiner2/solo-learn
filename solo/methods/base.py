@@ -305,6 +305,7 @@ class BaseMethod(pl.LightningModule):
         # wandb
         parser.add_argument("--name")
         parser.add_argument("--project")
+        parser.add_argument("--wandb_version")
         parser.add_argument("--entity", default=None, type=str)
         parser.add_argument("--wandb", action="store_true")
         parser.add_argument("--offline", action="store_true")
@@ -421,7 +422,7 @@ class BaseMethod(pl.LightningModule):
         Returns:
             Tuple[List, List]: two lists containing the optimizer and the scheduler.
         """
-
+        
         # collect learnable parameters
         idxs_no_scheduler = [
             i for i, m in enumerate(self.learnable_params) if m.pop("static_lr", False)
@@ -487,7 +488,6 @@ class BaseMethod(pl.LightningModule):
                 scheduler["scheduler"].get_lr = partial_fn
             else:
                 scheduler.get_lr = partial_fn
-
         return [optimizer], [scheduler]
 
     def forward(self, *args, **kwargs) -> Dict:
