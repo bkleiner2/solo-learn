@@ -22,13 +22,18 @@ python3 ../../../main_pretrain.py \
     --crop_size 32 \
     --num_crops_per_aug 1 1 \
     --zero_init_residual \
-    --name simsiam-$1-baseline \
+    --name simsiam-$1-momentum99-995 \
     --project ssl-project \
     --entity cu-ssl-project \
-    --wandb_version simsiam-$1-baseline \
     --save_checkpoint \
-    --method simsiam \
+    --method simsiammom \
     --proj_hidden_dim 2048 \
     --pred_hidden_dim 512 \
     --proj_output_dim 2048 \
     --wandb \
+    --base_tau_momentum 0.99 \
+    --final_tau_momentum 0.995 \
+    --momentum_classifier
+#    --checkpoint_dir "trained_models/simsiammom/simsiam-cifar100-momentum_asdfasd" \
+#    --resume_from_checkpoint "trained_models/simsiammom/simsiam-cifar100-momentum_asdfasd/simsiam-cifar100-momentum99-995-simsiam-cifar100-momentum_asdfasd-ep=23.ckpt"
+#    --wandb_version simsiam-$1-momentum_asdfasd \

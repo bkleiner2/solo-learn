@@ -18,13 +18,15 @@
 # DEALINGS IN THE SOFTWARE.
 
 import argparse
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Sequence, Tuple
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from solo.losses.simsiam import simsiam_loss_func
 from solo.methods.base import BaseMomentumMethod
+from solo.utils.momentum import initialize_momentum_params
 
 
 class SimSiamMomentum(BaseMomentumMethod):
@@ -69,6 +71,7 @@ class SimSiamMomentum(BaseMomentumMethod):
             nn.BatchNorm1d(proj_output_dim, affine=False),
         )
         self.momentum_projector[6].bias.requires_grad = False  # hack: not use bias as it is followed by BN
+        initialize_momentum_params(self.projector, self.momentum_projector)
 
         # predictor
         self.predictor = nn.Sequential(
@@ -80,7 +83,7 @@ class SimSiamMomentum(BaseMomentumMethod):
 
     @staticmethod
     def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-        parent_parser = super(SimSiam, SimSiam).add_model_specific_args(parent_parser)
+        parent_parser = super(SimSiamMomentum, SimSiamMomentum).add_model_specific_args(parent_parser)
         parser = parent_parser.add_argument_group("simsiam")
 
         # projector
@@ -114,8 +117,8 @@ class SimSiamMomentum(BaseMomentumMethod):
         """
 
         extra_momentum_pairs = [(self.projector, self.momentum_projector)]
-        return super.().momentum_pairs + extra_momentum_pairs
-
+        return super().momentum_pairs + extra_momentum_pairs
+    
     def forward(self, X: torch.Tensor, *args, **kwargs) -> Dict[str, Any]:
         """Performs the forward pass of the backbone, the projector and the predictor.
 
