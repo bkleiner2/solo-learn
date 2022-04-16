@@ -14,10 +14,9 @@ python3 ../../../main_linear.py \
     --warmup_epochs 5 \
     --weight_decay 0 \
     --batch_size 256 \
-    --num_workers 4 \
-    --name byol-cifar100-linear-eval-600pt-mom \
-    --pretrained_feature_extractor "../../pretrain/cifar/trained_models/byol/gshvbbrc/byol-cifar100-gshvbbrc-ep=601.ckpt" \
+    --num_workers 2 \
+    --name simsiam-cifar100-linear-eval-mom99-95 \
+    --pretrained_feature_extractor "../../pretrain/cifar/trained_models/simsiammom/38s8oahe/simsiam-cifar100-momentum99-995-38s8oahe-ep=199.ckpt" \
     --project ssl-project \
-    --entity bkleiner \
-    --use_momentum_backbone \
-    --wandb
+    --entity cu-ssl-project \
+    --wandb \
