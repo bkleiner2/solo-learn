@@ -33,6 +33,7 @@ from solo.methods.simsiam import SimSiam
 from solo.methods.mom_simsiam import SimSiamMomentum
 from solo.methods.supcon import SupCon
 from solo.methods.swav import SwAV
+from solo.methods.mom_swav import SwAVMomentum
 from solo.methods.vibcreg import VIbCReg
 from solo.methods.vicreg import VICReg
 from solo.methods.wmse import WMSE
@@ -56,6 +57,7 @@ METHODS = {
     "simsiammom": SimSiamMomentum,
     "supcon": SupCon,
     "swav": SwAV,
+    "swavmom": SwAVMomentum,
     "vibcreg": VIbCReg,
     "vicreg": VICReg,
     "wmse": WMSE,
@@ -77,6 +79,7 @@ __all__ = [
     "SimSiamMomentum",
     "SupCon",
     "SwAV",
+    "SwAVMomentum",
     "VIbCReg",
     "VICReg",
     "WMSE",
