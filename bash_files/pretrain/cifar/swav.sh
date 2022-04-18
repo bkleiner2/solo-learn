@@ -2,7 +2,7 @@ python3 ../../../main_pretrain.py \
     --dataset $1 \
     --backbone resnet18 \
     --data_dir ./datasets \
-    --max_epochs 1000 \
+    --max_epochs 200 \
     --gpus 0 \
     --accelerator gpu \
     --precision 16 \
@@ -15,7 +15,7 @@ python3 ../../../main_pretrain.py \
     --min_lr 0.0006 \
     --classifier_lr 0.1 \
     --weight_decay 1e-6 \
-    --batch_size 256 \
+    --batch_size 1024 \
     --num_workers 4 \
     --crop_size 32 \
     --brightness 0.8 \
@@ -25,11 +25,11 @@ python3 ../../../main_pretrain.py \
     --gaussian_prob 0.0 0.0 \
     --crop_size 32 \
     --num_crops_per_aug 1 1 \
-    --name swav-$1 \
+    --name swav-$1-baseline \
     --wandb \
     --save_checkpoint \
-    --project solo-learn \
-    --entity unitn-mhug \
+    --project ssl-project \
+    --entity cu-ssl-project \
     --method swav \
     --proj_hidden_dim 2048 \
     --queue_size 3840 \
