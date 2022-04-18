@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Sequence, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from solo.losses.barlow import barlow_loss_func
 from solo.losses.simsiam import simsiam_loss_func
 from solo.methods.base import BaseMomentumMethod
@@ -73,7 +74,7 @@ class BarlowTwinsMomentum(BaseMomentumMethod):
 
     @staticmethod
     def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-        parent_parser = super(BarlowTwins, BarlowTwins).add_model_specific_args(parent_parser)
+        parent_parser = super(BarlowTwinsMomentum, BarlowTwinsMomentum).add_model_specific_args(parent_parser)
         parser = parent_parser.add_argument_group("barlow_twins")
 
         # projector
