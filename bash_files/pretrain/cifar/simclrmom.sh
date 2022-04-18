@@ -25,12 +25,18 @@ python3 ../../../main_pretrain.py \
     --gaussian_prob 0.0 0.0 \
     --crop_size 32 \
     --num_crops_per_aug 1 1 \
-    --name simclr-$1 \
+    --name simclr-$1-momentum97 \
+    --wandb_version simclr-$1-momentum97 \
     --project ssl-project \
     --entity cu-ssl-project \
     --save_checkpoint \
-    --method simclr \
+    --method simclrmom \
     --temperature 0.1 \
     --proj_hidden_dim 2048 \
     --proj_output_dim 256 \
-    --wandb \
+    --base_tau_momentum 0.97 \
+    --final_tau_momentum 0.97 \
+    --momentum_classifier \
+    --wandb
+#    --checkpoint_dir "trained_models/simclrmom/simclr-cifar100-momentum" \
+#    --resume_from_checkpoint "trained_models/simclrmom/simclr-cifar100-momentum/simclr-cifar100-momentum99-995-simclr-cifar100-momentum-ep=104.ckpt" \

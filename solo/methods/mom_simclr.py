@@ -18,18 +18,21 @@
 # DEALINGS IN THE SOFTWARE.
 
 import argparse
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Sequence, Tuple
 
+import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from solo.losses.simclr import simclr_loss_func
+from solo.losses.simsiam import simsiam_loss_func
 from solo.methods.base import BaseMomentumMethod
 from solo.utils.momentum import initialize_momentum_params
 
 
-class SimCLR(BaseMomentumMethod):
+class SimCLRMomentum(BaseMomentumMethod):
     def __init__(self, proj_output_dim: int, proj_hidden_dim: int, temperature: float, **kwargs):
-        """Implements SimCLR (https://arxiv.org/abs/2002.05709).
+        """Implements SimCLR (https://arxiv.org/abs/2002.05709) with a momentum encoder.
 
         Args:
             proj_output_dim (int): number of dimensions of the projected features.
@@ -58,7 +61,7 @@ class SimCLR(BaseMomentumMethod):
 
     @staticmethod
     def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-        parent_parser = super(SimCLR, SimCLR).add_model_specific_args(parent_parser)
+        parent_parser = super(SimCLRMomentum, SimCLRMomentum).add_model_specific_args(parent_parser)
         parser = parent_parser.add_argument_group("simclr")
 
         # projector
@@ -112,18 +115,6 @@ class SimCLR(BaseMomentumMethod):
         self, feats: List[torch.Tensor], momentum_feats: List[torch.Tensor], img_indexes: List[int]
     ) -> torch.Tensor:
         
-        # ------- contrastive loss -------
-        n_augs = self.num_large_crops + self.num_small_crops
-        indexes = indexes.repeat(n_augs)
-
-        nce_loss = simclr_loss_func(
-            z,
-            indexes=indexes,
-            temperature=self.temperature,
-        )
-
-        self.log("train_nce_loss", nce_loss, on_epoch=True, sync_dist=True)
-
 
         Z = [self.projector(f) for f in feats]
 
@@ -131,23 +122,29 @@ class SimCLR(BaseMomentumMethod):
         with torch.no_grad():
             Z_momentum = [self.momentum_projector(f) for f in momentum_feats]
         
-        # ------- negative consine similarity loss -------
+        n_augs = self.num_large_crops + self.num_small_crops
+        indexes = img_indexes.repeat(n_augs)
+        
+        # ------- loss -------
         neg_cos_sim = 0
         cross_entropy = 0
         l1_dist = 0
         l2_dist = 0
         smooth_l1 = 0
         kl_div = 0
+        nce_loss = 0
         for v1 in range(self.num_large_crops):
             for v2 in np.delete(range(self.num_crops), v1):
-                neg_cos_sim += simsiam_loss_func(P[v2], Z_momentum[v1])
-                p_detach = P[v2].detach()
-                z_detach = Z_momentum[v1].detach()
-                l2_dist += F.mse_loss(p_detach, z_detach)
-                l1_dist += F.l1_loss(p_detach, z_detach)
-                cross_entropy += F.cross_entropy(p_detach, z_detach)
-                smooth_l1 += F.smooth_l1_loss(p_detach, z_detach)
-                kl_div += F.kl_div(p_detach, z_detach)
+                z = torch.cat([Z[v2], Z_momentum[v1].detach()])
+                nce_loss += simclr_loss_func(z, indexes=indexes, temperature=self.temperature)
+                
+                with torch.no_grad():
+                    neg_cos_sim += simsiam_loss_func(Z[v2], Z_momentum[v1])
+                    l2_dist += F.mse_loss(Z[v2], Z_momentum[v1])
+                    l1_dist += F.l1_loss(Z[v2], Z_momentum[v1])
+                    cross_entropy += F.cross_entropy(Z[v2], Z_momentum[v1])
+                    smooth_l1 += F.smooth_l1_loss(Z[v2], Z_momentum[v1])
+                    kl_div += F.kl_div(Z[v2], Z_momentum[v1])
 
         # calculate std of features
         with torch.no_grad():
@@ -161,31 +158,14 @@ class SimCLR(BaseMomentumMethod):
             "train_smooth_l1": smooth_l1,
             "train_kl_div": kl_div,
             "train_neg_cos_sim": neg_cos_sim,
+            "train_nce_loss": nce_loss,
             "train_mom_feats_std": mom_std,
             "train_z_std": z_std
         }
 
         self.log_dict(metrics, on_epoch=True, sync_dist=True)
 
-        return neg_cos_sim, z_std
-    
-    def training_step(self, batch: Sequence[Any], batch_idx: int) -> torch.Tensor:
-        """Training step for SimSiam reusing BaseMethod training step.
-
-        Args:
-            batch (Sequence[Any]): a batch of data in the format of [img_indexes, [X], Y], where
-                [X] is a list of size num_crops containing batches of images
-            batch_idx (int): index of the batch
-
-        Returns:
-            torch.Tensor: total loss composed of SimSiam loss and classification loss
-        """
-
-        out = super().training_step(batch, batch_idx)
-        class_loss = out["loss"]
-
-        neg_cos_sim, z_std = self._shared_step(out["feats"], out["momentum_feats"], batch[0])
-        return neg_cos_sim + class_loss
+        return nce_loss
 
     def training_step(self, batch: Sequence[Any], batch_idx: int) -> torch.Tensor:
         """Training step for SimCLR reusing BaseMethod training step.
