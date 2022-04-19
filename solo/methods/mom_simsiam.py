@@ -154,16 +154,16 @@ class SimSiamMomentum(BaseMomentumMethod):
         l2_dist = 0
         smooth_l1 = 0
         kl_div = 0
+        n_augs = self.num_large_crops + self.num_small_crops
         for v1 in range(self.num_large_crops):
             for v2 in np.delete(range(self.num_crops), v1):
-                neg_cos_sim += simsiam_loss_func(P[v2], Z_momentum[v1])
-                p_detach = P[v2].detach()
-                z_detach = Z_momentum[v1].detach()
-                l2_dist += F.mse_loss(p_detach, z_detach)
-                l1_dist += F.l1_loss(p_detach, z_detach)
-                cross_entropy += F.cross_entropy(p_detach, z_detach)
-                smooth_l1 += F.smooth_l1_loss(p_detach, z_detach)
-                kl_div += F.kl_div(p_detach, z_detach)
+                neg_cos_sim += (simsiam_loss_func(P[v2], Z_momentum[v1].detach()) / n_augs)
+                with torch.no_grad():
+                    l2_dist += F.mse_loss(P[v2], Z_momentum[v1])
+                    l1_dist += F.l1_loss(P[v2], Z_momentum[v1])
+                    cross_entropy += F.cross_entropy(P[v2], Z_momentum[v1])
+                    smooth_l1 += F.smooth_l1_loss(P[v2], Z_momentum[v1])
+                    kl_div += F.kl_div(P[v2], Z_momentum[v1])
 
         # calculate std of features
         with torch.no_grad():
