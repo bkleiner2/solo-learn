@@ -147,6 +147,7 @@ def main():
             args,
             logdir=os.path.join(args.checkpoint_dir, args.method),
             frequency=args.checkpoint_frequency,
+            keep_previous_checkpoints=args.keep_previous_checkpoints,
         )
         callbacks.append(ckpt)
 
@@ -192,7 +193,6 @@ def main():
         trainer.fit(model, ckpt_path=ckpt_path)
     else:
         model.set_loaders(train_loader=train_loader, val_loader=val_loader)
-        print (f"ckpt_path={ckpt_path}")
         trainer.fit(model, ckpt_path=ckpt_path)
 
 

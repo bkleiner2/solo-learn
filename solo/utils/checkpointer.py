@@ -64,7 +64,7 @@ class Checkpointer(Callback):
         self.logdir = Path(logdir)
         self.frequency = frequency
         self.keep_previous_checkpoints = keep_previous_checkpoints
-
+    
     @staticmethod
     def add_checkpointer_args(parent_parser: ArgumentParser):
         """Adds user-required arguments to a parser.
@@ -76,6 +76,7 @@ class Checkpointer(Callback):
         parser = parent_parser.add_argument_group("checkpointer")
         parser.add_argument("--checkpoint_dir", default=Path("trained_models"), type=Path)
         parser.add_argument("--checkpoint_frequency", default=1, type=int)
+        parser.add_argument("--keep_previous_checkpoints", action="store_true")
         return parent_parser
 
     def initial_setup(self, trainer: pl.Trainer):
