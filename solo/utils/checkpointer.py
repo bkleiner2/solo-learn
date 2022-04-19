@@ -97,10 +97,10 @@ class Checkpointer(Callback):
             version = str(trainer.logger.version)
         if version is not None:
             self.path = self.logdir / version
-            self.ckpt_placeholder = f"{self.args.name}-{version}-checkpointer" + "-ep={}.ckpt"
+            self.ckpt_placeholder = f"{self.args.name}-{version}" + "-ep={}.ckpt"
         else:
             self.path = self.logdir
-            self.ckpt_placeholder = f"{self.args.name}-checkpointer" + "-ep={}.ckpt"
+            self.ckpt_placeholder = f"{self.args.name}" + "-ep={}.ckpt"
         self.last_ckpt: Optional[str] = None
 
         # create logging dirs
@@ -119,21 +119,21 @@ class Checkpointer(Callback):
             json_path = self.path / "args.json"
             json.dump(args, open(json_path, "w"), default=lambda o: "<not serializable>")
 
-    def save(self, trainer: pl.Trainer, is_epoch_end=False):
+    def save(self, trainer: pl.Trainer):
         """Saves current checkpoint.
 
         Args:
             trainer (pl.Trainer): pytorch lightning trainer object.
         """
+
         if trainer.is_global_zero and not trainer.sanity_checking:
             epoch = trainer.current_epoch  # type: ignore
             ckpt = self.path / self.ckpt_placeholder.format(epoch)
-            trainer.save_checkpoint(ckpt, is_epoch_end=is_epoch_end)
+            trainer.save_checkpoint(ckpt)
 
-            if is_epoch_end and self.last_ckpt and self.last_ckpt != ckpt and not self.keep_previous_checkpoints:
+            if self.last_ckpt and self.last_ckpt != ckpt and not self.keep_previous_checkpoints:
                 os.remove(self.last_ckpt)
-            if is_epoch_end:
-                self.last_ckpt = ckpt
+            self.last_ckpt = ckpt
 
     def on_train_start(self, trainer: pl.Trainer, _):
         """Executes initial setup and saves arguments.
@@ -154,4 +154,4 @@ class Checkpointer(Callback):
 
         epoch = trainer.current_epoch  # type: ignore
         if epoch % self.frequency == 0:
-            self.save(trainer, True)
+            self.save(trainer)
