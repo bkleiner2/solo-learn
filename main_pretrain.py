@@ -55,6 +55,15 @@ from solo.utils.pretrain_dataloader import (
     prepare_transform,
 )
 
+class Trainer_(Trainer):
+    """
+    Ensure checkpoints are only saved on end of epoch
+    """
+    def save_checkpoint(self, filepath, weights_only=False, storage_options=None, is_epoch_end=False):
+        print ("Calling save_checkpoint...")
+        if is_epoch_end:
+            print (f"\nSaving checkpoint, current epoch is {self.current_epoch}")
+            super().save_checkpoint(filepath=filepath, weights_only=weights_only)
 
 def main():
     seed_everything(5)
@@ -180,7 +189,7 @@ def main():
         ckpt_path = args.resume_from_checkpoint
         del args.resume_from_checkpoint
 
-    trainer = Trainer.from_argparse_args(
+    trainer = Trainer_.from_argparse_args(
         args,
         logger=wandb_logger if args.wandb else None,
         callbacks=callbacks,
