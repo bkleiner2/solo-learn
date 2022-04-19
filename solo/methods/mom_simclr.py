@@ -136,7 +136,7 @@ class SimCLRMomentum(BaseMomentumMethod):
         for v1 in range(self.num_large_crops):
             for v2 in np.delete(range(self.num_crops), v1):
                 z = torch.cat([Z[v2], Z_momentum[v1].detach()])
-                nce_loss += simclr_loss_func(z, indexes=indexes, temperature=self.temperature)
+                nce_loss += (simclr_loss_func(z, indexes=indexes, temperature=self.temperature) / n_augs)
                 
                 with torch.no_grad():
                     neg_cos_sim += simsiam_loss_func(Z[v2], Z_momentum[v1])
