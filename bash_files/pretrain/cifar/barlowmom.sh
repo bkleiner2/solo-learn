@@ -1,0 +1,39 @@
+python3 ../../../main_pretrain.py \
+    --dataset $1 \
+    --backbone resnet18 \
+    --data_dir ./datasets \
+    --max_epochs 200 \
+    --gpus 0 \
+    --accelerator gpu \
+    --precision 16 \
+    --num_workers 4 \
+    --optimizer sgd \
+    --lars \
+    --grad_clip_lars \
+    --eta_lars 0.02 \
+    --exclude_bias_n_norm \
+    --scheduler warmup_cosine \
+    --lr 0.4 \
+    --min_lr 0.0004 \
+    --weight_decay 15e-6 \
+    --batch_size 512 \
+    --brightness 0.4 \
+    --contrast 0.4 \
+    --saturation 0.2 \
+    --hue 0.1 \
+    --gaussian_prob 1.0 0.1 \
+    --solarization_prob 0.0 0.2 \
+    --crop_size 32 \
+    --num_crops_per_aug 1 1 \
+    --name barlow-$1-momentum50 \
+    --project ssl-project \
+    --entity cu-ssl-project \
+    --save_checkpoint \
+    --method barlow_twinsmom \
+    --proj_hidden_dim 2048 \
+    --proj_output_dim 2048 \
+    --scale_loss 0.1 \
+    --base_tau_momentum 0.5 \
+    --final_tau_momentum 0.5 \
+    --momentum_classifier \
+    --wandb \
