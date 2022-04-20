@@ -59,7 +59,7 @@ class MomentumUpdater:
         self.base_tau = base_tau
         self.cur_tau = base_tau
         self.final_tau = final_tau
-        self.variance = {}
+#        self.variance = {}
 
     @torch.no_grad()
     def update(self, online_net: nn.Module, momentum_net: nn.Module):
@@ -74,11 +74,11 @@ class MomentumUpdater:
         for op_, mp_ in zip(online_net.named_parameters(), momentum_net.named_parameters()):
             op_name, op = op_
             mp_name, mp = mp_
-            if mp_name not in self.variance:
+#            if mp_name not in self.variance:
               # initialize to 0
-              self.variance[mp_name] = mp.data - mp.data
-            else:
-              self.variance[mp_name] = (1 - self.cur_tau)*(self.variance[mp_name] + self.cur_tau*torch.square(op.data - mp.data))
+#              self.variance[mp_name] = mp.data - mp.data
+#            else:
+#              self.variance[mp_name] = (1 - self.cur_tau)*(self.variance[mp_name] + self.cur_tau*torch.square(op.data - mp.data))
             mp.data = self.cur_tau * mp.data + (1 - self.cur_tau) * op.data
 
     def update_tau(self, cur_step: int, max_steps: int):
