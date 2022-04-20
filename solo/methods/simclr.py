@@ -22,7 +22,9 @@ from typing import Any, Dict, List, Sequence
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from solo.losses.simclr import simclr_loss_func
+from solo.losses.simsiam import simsiam_loss_func
 from solo.methods.base import BaseMethod
 
 
@@ -106,19 +108,41 @@ class SimCLR(BaseMethod):
         class_loss = out["loss"]
 
         feats = out["feats"]
+        assert len(feats) == 2, "only 2 augmentations supported"
 
-        z = torch.cat([self.projector(f) for f in feats])
+        z1, z2 = [self.projector(f) for f in feats]
+        z = torch.cat([z1, z2])
 
         # ------- contrastive loss -------
-        n_augs = self.num_large_crops + self.num_small_crops
-        indexes = indexes.repeat(n_augs)
+        indexes = indexes.repeat(2)
 
         nce_loss = simclr_loss_func(
             z,
             indexes=indexes,
             temperature=self.temperature,
         )
+        
+        # log other metrics for analysis
+        with torch.no_grad():
+            neg_cos_sim = simsiam_loss_func(z1, z2)
+            l2_dist = F.mse_loss(z1, z2)
+            l1_dist = F.l1_loss(z1, z2)
+            cross_entropy = F.cross_entropy(z1, z2)
+            smooth_l1 = F.smooth_l1_loss(z1, z2)
+            kl_div = F.kl_div(z1, z2)
+            z_std = F.normalize(torch.stack([z1, z2]), dim=-1).std(dim=1).mean()
 
-        self.log("train_nce_loss", nce_loss, on_epoch=True, sync_dist=True)
+        metrics = {
+            "train_cross_entropy": cross_entropy,
+            "train_l1_dist": l1_dist,
+            "train_l2_dist": l2_dist,
+            "train_smooth_l1": smooth_l1,
+            "train_kl_div": kl_div,
+            "train_neg_cos_sim": neg_cos_sim,
+            "train_nce_loss": nce_loss,
+            "train_z_std": z_std
+        }
+
+        self.log_dict(metrics, on_epoch=True, sync_dist=True)
 
         return nce_loss + class_loss
