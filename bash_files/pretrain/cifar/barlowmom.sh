@@ -2,7 +2,7 @@ python3 ../../../main_pretrain.py \
     --dataset $1 \
     --backbone resnet18 \
     --data_dir ./datasets \
-    --max_epochs 200 \
+    --max_epochs 800 \
     --gpus 0 \
     --accelerator gpu \
     --precision 16 \
@@ -25,7 +25,7 @@ python3 ../../../main_pretrain.py \
     --solarization_prob 0.0 0.2 \
     --crop_size 32 \
     --num_crops_per_aug 1 1 \
-    --name barlow-$1-momentum50 \
+    --name barlow-$1-momentum50-800 \
     --project ssl-project \
     --entity cu-ssl-project \
     --save_checkpoint \
@@ -37,3 +37,4 @@ python3 ../../../main_pretrain.py \
     --final_tau_momentum 0.5 \
     --momentum_classifier \
     --wandb \
+    --wandb_version barlow-$1-momentum50-800 \
