@@ -143,16 +143,16 @@ class BarlowTwinsMomentum(BaseMomentumMethod):
         barlow_loss = 0
         for v1 in range(self.num_large_crops):
             for v2 in np.delete(range(self.num_crops), v1):
-                barlow_loss += barlow_loss_func(Z[v2], Z_momentum[v1].detach(), lamb=self.lamb, scale_loss=self.scale_loss)
+                barlow_loss += barlow_loss_func(Z[v2], Z_momentum[v1].detach(), lamb=self.lamb, scale_loss=self.scale_loss) / len(feats)
                 
                 with torch.no_grad():
-                    neg_cos_sim += simsiam_loss_func(Z[v2], Z_momentum[v1])
-                    l2_dist += F.mse_loss(Z[v2], Z_momentum[v1])
-                    l1_dist += F.l1_loss(Z[v2], Z_momentum[v1])
-                    cross_entropy += F.cross_entropy(Z[v2], Z_momentum[v1])
-                    smooth_l1 += F.smooth_l1_loss(Z[v2], Z_momentum[v1])
-                    kl_div += F.kl_div(Z[v2], Z_momentum[v1])
-
+                    neg_cos_sim += simsiam_loss_func(Z[v2], Z_momentum[v1]) / len(feats)
+                    l2_dist += F.mse_loss(Z[v2], Z_momentum[v1]) / len(feats)
+                    l1_dist += F.l1_loss(Z[v2], Z_momentum[v1]) / len(feats)
+                    cross_entropy += F.cross_entropy(Z[v2], Z_momentum[v1]) / len(feats)
+                    smooth_l1 += F.smooth_l1_loss(Z[v2], Z_momentum[v1]) / len(feats)
+                    kl_div += F.kl_div(Z[v2], Z_momentum[v1]) / len(feats)
+        
         if self.training_labels is not None:
             self.training_labels[img_indexes] = torch.stack(Z_momentum).mean(dim=0).detach().cpu()
 

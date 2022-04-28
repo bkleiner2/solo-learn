@@ -92,7 +92,7 @@ class SwAVMomentum(BaseMomentumMethod):
 
     @staticmethod
     def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-        parent_parser = super(SwAV, SwAV).add_model_specific_args(parent_parser)
+        parent_parser = super(SwAVMomentum, SwAVMomentum).add_model_specific_args(parent_parser)
         parser = parent_parser.add_argument_group("swav")
 
         # projector
@@ -139,6 +139,7 @@ class SwAVMomentum(BaseMomentumMethod):
     def on_train_start(self):
         """Gets the world size and sets it in the sinkhorn and the queue."""
         # sinkhorn-knopp needs the world size
+        super().on_train_start()
         world_size = self.trainer.world_size if self.trainer else 1
         self.sk = SinkhornKnopp(self.sk_iters, self.sk_epsilon, world_size)
         # queue also needs the world size
@@ -217,19 +218,19 @@ class SwAVMomentum(BaseMomentumMethod):
                 p2 = self.prototypes(Z_momentum[v1].detach())
                 preds = [p1, p2]
                 assignments = self.get_assignments(preds)
-                swav_loss += swav_loss_func(preds, assignments, self.temperature)
+                swav_loss += swav_loss_func(preds, assignments, self.temperature) / len(Z)
                 if self.queue_size > 0:
-                    z = torch.stack((Z[v2], Z_momentum[v1]))
+                    z = torch.stack((Z[v2], Z_momentum[v1].detach()))
                     self.queue[:, z.size(1) :] = self.queue[:, : -z.size(1)].clone()
                     self.queue[:, : z.size(1)] = z.detach()
                 
                 with torch.no_grad():
-                    neg_cos_sim += simsiam_loss_func(P[v2], Z_momentum[v1])
-                    l2_dist += F.mse_loss(P[v2], Z_momentum[v1])
-                    l1_dist += F.l1_loss(P[v2], Z_momentum[v1])
-                    cross_entropy += F.cross_entropy(P[v2], Z_momentum[v1])
-                    smooth_l1 += F.smooth_l1_loss(P[v2], Z_momentum[v1])
-                    kl_div += F.kl_div(P[v2], Z_momentum[v1])
+                    neg_cos_sim += simsiam_loss_func(Z[v2], Z_momentum[v1]) / len(Z)
+                    l2_dist += F.mse_loss(Z[v2], Z_momentum[v1]) / len(Z)
+                    l1_dist += F.l1_loss(Z[v2], Z_momentum[v1]) / len(Z)
+                    cross_entropy += F.cross_entropy(Z[v2], Z_momentum[v1]) / len(Z)
+                    smooth_l1 += F.smooth_l1_loss(Z[v2], Z_momentum[v1]) / len(Z)
+                    kl_div += F.kl_div(Z[v2], Z_momentum[v1]) / len(Z)
 
         # calculate std of features
         with torch.no_grad():
