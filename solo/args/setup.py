@@ -56,6 +56,7 @@ def parse_args_pretrain() -> argparse.Namespace:
     parser.add_argument("--log_training_labels", action="store_true")
     parser.add_argument("--training_labels_log_dir")
     parser.add_argument("--loss_function_to_use")
+    parser.add_argument("--subset", default=0, type=int)
 
     # add shared arguments
     dataset_args(parser)
