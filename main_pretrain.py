@@ -20,6 +20,7 @@
 import os
 from pprint import pprint
 
+import numpy as np
 import torch
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import LearningRateMonitor
@@ -55,9 +56,10 @@ from solo.utils.pretrain_dataloader import (
     prepare_transform,
 )
 
+RANDOM_SEED = 5
 
 def main():
-    seed_everything(5)
+    seed_everything(RANDOM_SEED)
 
     args = parse_args_pretrain()
 
@@ -97,6 +99,10 @@ def main():
             train_dir=args.train_dir,
             no_labels=args.no_labels,
         )
+        if args.subset:
+            idx_subsets = np.random.randint(0, len(train_dataset), size=(5, len(train_dataset)))
+            train_dataset = torch.utils.data.Subset(train_dataset, idx_subsets[args.subset - 1])
+            
         train_loader = prepare_dataloader(
             train_dataset, batch_size=args.batch_size, num_workers=args.num_workers
         )
