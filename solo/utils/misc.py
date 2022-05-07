@@ -17,11 +17,14 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import os
 import math
 import warnings
 from typing import List, Tuple
 from collections import defaultdict
+import pickle
 
+import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn as nn
@@ -216,6 +219,19 @@ class TrainingDataLog:
             count = self.counts[key]
             self.data_log[key] = (self.data_log[key] * (count - 1) + value) / count
 
-
+def write_predictions(args, predictions):
+    logits = []
+    feats = []
+    for output in predictions:
+        logits.append(output["logits"].cpu().numpy())
+        feats.append(output["feats"].cpu().numpy())
+    logits = np.concatenate(logits)
+    feats = np.concatenate(feats)
+    
+    with open(os.path.join(args.output_dir, f"{args.name}_logits.pkl"), "wb") as pkl:
+        pickle.dump(logits, pkl)
+    
+    with open(os.path.join(args.output_dir, f"{args.name}_feats.pkl"), "wb") as pkl:
+        pickle.dump(feats, pkl)
 
 

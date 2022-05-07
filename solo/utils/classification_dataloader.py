@@ -19,7 +19,7 @@
 
 import os
 from pathlib import Path
-from typing import Callable, Optional, Tuple, Union
+from typing import Any, Callable, List, Tuple, Optional, Sequence, Type, Union
 
 import torchvision
 from torch import nn
@@ -147,6 +147,7 @@ def prepare_datasets(
     train_dir: Optional[Union[str, Path]] = None,
     val_dir: Optional[Union[str, Path]] = None,
     download: bool = True,
+    remove_labels: bool = False,
 ) -> Tuple[Dataset, Dataset]:
     """Prepares train and val datasets.
 
@@ -188,13 +189,22 @@ def prepare_datasets(
             download=download,
             transform=T_train,
         )
+        #TODO for predict only. Clean up for all datasets
+        if remove_labels:
+            val_dataset = dataset_with_no_labels(DatasetClass)(
+                data_dir / val_dir,
+                train=False,
+                download=download,
+                transform=T_val,
+            )
+        else:
+            val_dataset = DatasetClass(
+                data_dir / val_dir,
+                train=False,
+                download=download,
+                transform=T_val,
+            )
 
-        val_dataset = DatasetClass(
-            data_dir / val_dir,
-            train=False,
-            download=download,
-            transform=T_val,
-        )
 
     elif dataset == "stl10":
         train_dataset = STL10(
@@ -260,6 +270,7 @@ def prepare_data(
     batch_size: int = 64,
     num_workers: int = 4,
     download: bool = True,
+    remove_labels: bool = False,
 ) -> Tuple[DataLoader, DataLoader]:
     """Prepares transformations, creates dataset objects and wraps them in dataloaders.
 
@@ -287,6 +298,7 @@ def prepare_data(
         train_dir=train_dir,
         val_dir=val_dir,
         download=download,
+        remove_labels=remove_labels
     )
     print (f"train_dataset_size={len(train_dataset)} val_dataset_size={len(val_dataset)}")
     train_loader, val_loader = prepare_dataloaders(
@@ -296,3 +308,30 @@ def prepare_data(
         num_workers=num_workers,
     )
     return train_loader, val_loader
+
+
+def dataset_with_no_labels(DatasetClass: Type[Dataset]) -> Type[Dataset]:
+    """Factory for datasets that also returns the data index.
+
+    Args:
+        DatasetClass (Type[Dataset]): Dataset class to be wrapped.
+
+    Returns:
+        Type[Dataset]: dataset with index.
+    """
+
+    class DatasetWithNoLabels(DatasetClass):
+        def __getitem__(self, index):
+            data = super().__getitem__(index)
+        #    print ("LEN OF DATA: ", len(data))
+        #    for i, element in enumerate(data):
+        #        print ("------------------------")
+        #        print (type(element), i)
+        #        if isinstance(element, int):
+        #            print ("label is: ", element)
+        #        else:
+        #            print (element.shape)
+        #    assert False
+            return data[0]
+
+    return DatasetWithNoLabels

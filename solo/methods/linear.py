@@ -163,7 +163,7 @@ class LinearModel(pl.LightningModule):
 
         return parent_parser
 
-    def set_loaders(self, train_loader: DataLoader = None, val_loader: DataLoader = None) -> None:
+    def set_loaders(self, train_loader: DataLoader = None, val_loader: DataLoader = None, predict_loader: DataLoader = None) -> None:
         """Sets dataloaders so that you can obtain extra information about them.
         We currently only use to obtain the number of training steps per epoch.
 
@@ -178,6 +178,9 @@ class LinearModel(pl.LightningModule):
 
         if val_loader is not None:
             self.val_dataloader = lambda: val_loader
+
+        if predict_loader is not None:
+            self.predict_dataloader = lambda: predict_loader
 
     @property
     def num_training_steps(self) -> int:

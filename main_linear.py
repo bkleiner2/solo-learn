@@ -50,7 +50,7 @@ import types
 from solo.methods.linear import LinearModel
 from solo.utils.checkpointer import Checkpointer
 from solo.utils.classification_dataloader import prepare_data
-
+from solo.utils.misc import write_predictions
 
 def main():
     args = parse_args_linear()
@@ -124,6 +124,7 @@ def main():
         val_dir=args.val_dir,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
+        remove_labels=args.predict
     )
 
     callbacks = []
@@ -167,6 +168,10 @@ def main():
     if args.dali:
         model.set_loaders(val_loader=val_loader)
         trainer.fit(model, ckpt_path=ckpt_path)
+    elif args.predict:
+        model.set_loaders(predict_loader=val_loader)
+        predictions = trainer.predict(model, ckpt_path=ckpt_path)
+        write_predictions(args, predictions)
     else:
         model.set_loaders(train_loader=train_loader, val_loader=val_loader)
         trainer.fit(model, ckpt_path=ckpt_path)
