@@ -15,8 +15,13 @@ python3 ../../../main_linear.py \
     --weight_decay 0 \
     --batch_size 256 \
     --num_workers 4 \
-    --name swav-cifar100-linear-eval-baseline \
-    --pretrained_feature_extractor "../../pretrain/cifar/trained_models/swav/109yqgiq/swav-cifar100-baseline-109yqgiq-ep=199.ckpt" \
+    --save_checkpoint \
+    --name simsiam-cifar100-linear-eval-momentum99-subset1 \
+    --pretrained_feature_extractor "../../pretrain/cifar/trained_models/simsiammom/simsiam-cifar100-momentum99_subset1/simsiam-cifar100-momentum99_subset1-simsiam-cifar100-momentum99_subset1-ep=199.ckpt" \
     --project ssl-project \
     --entity cu-ssl-project \
-    --wandb \
+    --checkpoint_dir "trained_models/linear/28xhd93h" \
+    --resume_from_checkpoint "trained_models/linear/28xhd93h/simsiam-cifar100-linear-eval-momentum99-subset1-28xhd93h-ep=99.ckpt" \
+    --output_dir results \
+    --predict
+    #--wandb \
