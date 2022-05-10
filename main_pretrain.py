@@ -102,7 +102,11 @@ def main():
         if args.subset:
             idx_subsets = np.random.randint(0, len(train_dataset), size=(5, len(train_dataset)))
             train_dataset = torch.utils.data.Subset(train_dataset, idx_subsets[args.subset - 1])
-            
+        
+        if args.small_dataset is not None:
+            keep_idxs = np.random.choice(np.arange(len(train_dataset)), size=args.small_dataset, replace=False)
+            train_dataset = torch.utils.data.Subset(train_dataset, keep_idxs)
+        
         train_loader = prepare_dataloader(
             train_dataset, batch_size=args.batch_size, num_workers=args.num_workers
         )
